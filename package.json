@@ -14,7 +14,8 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.ts\"",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "update:github": "node scripts/update-github-metadata.js"
   },
   "keywords": [
     "search",

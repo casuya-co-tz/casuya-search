@@ -16,5 +16,18 @@
     "@typescript-eslint/no-explicit-any": "off",
     "no-case-declarations": "off",
     "no-undef": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["scripts/**/*.js"],
+      "parser": "espree",
+      "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "commonjs"
+      },
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    }
+  ]
 }
