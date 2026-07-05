@@ -2,5 +2,9 @@ node_modules/
 dist/
 coverage/
 *.log
-.DS_Store
+*.tsbuildinfo
+.eslintcache
+.npm/
 .env
+.DS_Store
+Thumbs.db

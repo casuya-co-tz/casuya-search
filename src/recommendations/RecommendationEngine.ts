@@ -8,18 +8,31 @@ import { Recommendation, SearchDocument } from '../types';
 export class RecommendationEngine {
   private userInteractions: Map<string, UserInteraction[]>;
   private documentSimilarity: Map<string, string[]>;
+  private documents: Map<string, SearchDocument>;
   private maxRecommendations: number;
 
   constructor(maxRecommendations: number = 10) {
     this.userInteractions = new Map();
     this.documentSimilarity = new Map();
+    this.documents = new Map();
     this.maxRecommendations = maxRecommendations;
+  }
+
+  /**
+   * Index documents for profile building
+   */
+  indexDocuments(documents: SearchDocument[]): void {
+    for (const doc of documents) {
+      this.documents.set(doc.id, doc);
+    }
   }
 
   /**
    * Get recommendations for a user
    */
   getRecommendations(userId: string, allDocuments: SearchDocument[]): Recommendation[] {
+    this.indexDocuments(allDocuments);
+
     const interactions = this.userInteractions.get(userId) || [];
     const recommendations: Recommendation[] = [];
 
@@ -73,13 +86,33 @@ export class RecommendationEngine {
 
     for (const interaction of interactions) {
       const weight = this.getInteractionWeight(interaction.type);
+      const doc = this.documents.get(interaction.documentId);
+      if (!doc) continue;
 
-      // Subjects and topics would be looked up from document
-      // For now, we'll increment generic counters
-      profile.preferredSubjects.set(
-        'general',
-        (profile.preferredSubjects.get('general') || 0) + weight
-      );
+      if (doc.subject) {
+        profile.preferredSubjects.set(
+          doc.subject,
+          (profile.preferredSubjects.get(doc.subject) || 0) + weight
+        );
+      }
+
+      if (doc.topic) {
+        profile.preferredTopics.set(
+          doc.topic,
+          (profile.preferredTopics.get(doc.topic) || 0) + weight
+        );
+      }
+
+      if (doc.difficulty) {
+        profile.preferredDifficulty.set(
+          doc.difficulty,
+          (profile.preferredDifficulty.get(doc.difficulty) || 0) + weight
+        );
+      }
+
+      for (const tag of doc.tags) {
+        profile.preferredTags.set(tag, (profile.preferredTags.get(tag) || 0) + weight);
+      }
     }
 
     return profile;

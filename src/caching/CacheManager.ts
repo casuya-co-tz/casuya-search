@@ -15,11 +15,15 @@ export class CacheManager<T> {
   private cache: Map<string, CacheEntry<T>>;
   private config: CacheConfig;
   private accessOrder: string[];
+  private hits: number;
+  private misses: number;
 
   constructor(config: CacheConfig) {
     this.cache = new Map();
     this.config = config;
     this.accessOrder = [];
+    this.hits = 0;
+    this.misses = 0;
   }
 
   /**
@@ -29,6 +33,7 @@ export class CacheManager<T> {
     const entry = this.cache.get(key);
 
     if (!entry) {
+      this.misses++;
       return undefined;
     }
 
@@ -36,10 +41,12 @@ export class CacheManager<T> {
     if (Date.now() - entry.timestamp > this.config.ttl) {
       this.cache.delete(key);
       this.removeFromAccessOrder(key);
+      this.misses++;
       return undefined;
     }
 
     // Update access statistics
+    this.hits++;
     entry.accessCount++;
     this.updateAccessOrder(key);
 
@@ -105,6 +112,8 @@ export class CacheManager<T> {
       size: this.cache.size,
       maxSize: this.config.maxSize,
       hitRate: this.calculateHitRate(),
+      hits: this.hits,
+      misses: this.misses,
       entries: Array.from(this.cache.entries()).map(([key, entry]) => ({
         key,
         accessCount: entry.accessCount,
@@ -168,11 +177,20 @@ export class CacheManager<T> {
   }
 
   /**
-   * Calculate hit rate (placeholder - would need hit/miss tracking)
+   * Calculate hit rate based on tracked hits and misses
    */
   private calculateHitRate(): number {
-    // In a real implementation, track hits and misses
-    return 0;
+    const total = this.hits + this.misses;
+    if (total === 0) return 0;
+    return this.hits / total;
+  }
+
+  /**
+   * Reset hit/miss counters
+   */
+  resetStats(): void {
+    this.hits = 0;
+    this.misses = 0;
   }
 }
 
@@ -180,6 +198,8 @@ interface CacheStats {
   size: number;
   maxSize: number;
   hitRate: number;
+  hits: number;
+  misses: number;
   entries: Array<{
     key: string;
     accessCount: number;

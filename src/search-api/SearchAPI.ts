@@ -9,6 +9,7 @@ import { SuggestionsEngine } from '../suggestions/SuggestionsEngine';
 import { FilterEngine } from '../filters/FilterEngine';
 import { RecommendationEngine } from '../recommendations/RecommendationEngine';
 import { CacheManager } from '../caching/CacheManager';
+import { SearchAnalytics } from '../analytics/SearchAnalytics';
 import {
   SearchDocument,
   SearchQuery,
@@ -25,13 +26,15 @@ export class SearchAPI {
   private filterEngine: FilterEngine;
   private recommendationEngine: RecommendationEngine;
   private resultCache: CacheManager<SearchResult[]>;
+  private analytics: SearchAnalytics;
 
-  constructor(cacheConfig?: CacheConfig) {
+  constructor(cacheConfig?: CacheConfig, maxAnalyticsEvents?: number) {
     this.searchIndex = new SearchIndex();
     this.rankingEngine = new RankingEngine();
     this.suggestionsEngine = new SuggestionsEngine();
     this.filterEngine = new FilterEngine();
     this.recommendationEngine = new RecommendationEngine();
+    this.analytics = new SearchAnalytics(maxAnalyticsEvents);
 
     // Default cache configuration
     this.resultCache = new CacheManager<SearchResult[]>(
@@ -73,6 +76,14 @@ export class SearchAPI {
 
     // Record query for suggestions
     this.suggestionsEngine.recordQuery(query.query);
+
+    // Record analytics event
+    this.analytics.recordSearch({
+      query: query.query,
+      timestamp: new Date(),
+      resultsCount: results.length,
+      filters: query.filters?.map((f) => `${f.field}:${f.operator}`),
+    });
 
     return results;
   }
@@ -144,7 +155,40 @@ export class SearchAPI {
       totalDocuments: this.searchIndex.size(),
       totalSuggestions: this.suggestionsEngine.size(),
       cacheStats: this.resultCache.getStats(),
+      analyticsStats: {
+        totalEvents: this.analytics.size(),
+        popularQueries: this.analytics.getPopularQueries(5),
+        averageResults: this.analytics.getAverageResults(),
+        zeroResultQueries: this.analytics.getZeroResultQueries(5),
+      },
     };
+  }
+
+  /**
+   * Get search trends from analytics
+   */
+  getSearchTrends(days?: number): ReturnType<SearchAnalytics['getSearchTrends']> {
+    return this.analytics.getSearchTrends(days);
+  }
+
+  /**
+   * Get most clicked documents from analytics
+   */
+  getMostClickedDocuments(limit?: number): ReturnType<SearchAnalytics['getMostClickedDocuments']> {
+    return this.analytics.getMostClickedDocuments(limit);
+  }
+
+  /**
+   * Record a click on a search result for analytics
+   */
+  recordClick(query: SearchQuery, documentId: string): void {
+    this.analytics.recordSearch({
+      query: query.query,
+      timestamp: new Date(),
+      resultsCount: 0,
+      clickedResults: [documentId],
+      filters: query.filters?.map((f) => `${f.field}:${f.operator}`),
+    });
   }
 
   /**
@@ -166,4 +210,10 @@ interface SearchStats {
   totalDocuments: number;
   totalSuggestions: number;
   cacheStats: unknown;
+  analyticsStats: {
+    totalEvents: number;
+    popularQueries: Array<{ query: string; count: number }>;
+    averageResults: number;
+    zeroResultQueries: Array<{ query: string; count: number }>;
+  };
 }
