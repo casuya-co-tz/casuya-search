@@ -18,7 +18,7 @@ const metadata = {
   name: 'casuya-search',
   description:
     'Educational content search and discovery system for the Casuya platform. Full-text search, ranking algorithms, autocomplete, filtering, recommendations, caching, and analytics.',
-  homepage: 'https://casuya.org',
+  homepage: 'https://casuya.co.tz',
   topics: [
     'search',
     'education',

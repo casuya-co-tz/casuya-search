@@ -15,7 +15,7 @@ Educational content search and discovery system for the Casuya platform. Full-te
 ### Website
 
 ```
-https://casuya.org
+https://casuya.co.tz
 ```
 
 ### Topics
@@ -69,7 +69,7 @@ A placeholder social preview image is included at `.github/social-preview.png`. 
 ## Verification
 
 After setup, verify the repository metadata at:
-https://github.com/casuya-co-tz/casuya-search
+<https://github.com/casuya-co-tz/casuya-search>
 
 The repository should show:
 

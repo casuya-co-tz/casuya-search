@@ -22,7 +22,7 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             -d "{
               \"description\": \"$DESCRIPTION\",
-              \"homepage\": \"https://casuya.org\",
+              \"homepage\": \"https://casuya.co.tz\",
               \"topics\": [
                 \"search\",
                 \"education\",
